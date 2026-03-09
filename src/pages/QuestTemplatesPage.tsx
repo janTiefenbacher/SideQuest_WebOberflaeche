@@ -13,11 +13,18 @@ interface QuestTemplate {
   is_active: boolean;
 }
 
-const emptyForm: Omit<QuestTemplate, 'id'> = {
+type QuestTemplateForm = Omit<QuestTemplate, 'id' | 'points'>;
+
+const difficultyPoints: Record<Difficulty, number> = {
+  easy: 10,
+  medium: 20,
+  hard: 30
+};
+
+const emptyForm: QuestTemplateForm = {
   title: '',
   description: '',
   difficulty: 'easy',
-  points: 10,
   category: '',
   is_active: true
 };
@@ -26,7 +33,7 @@ export const QuestTemplatesPage: React.FC = () => {
   const [items, setItems] = useState<QuestTemplate[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState<Omit<QuestTemplate, 'id'>>(emptyForm);
+  const [form, setForm] = useState<QuestTemplateForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const load = async () => {
@@ -59,14 +66,21 @@ export const QuestTemplatesPage: React.FC = () => {
     e.preventDefault();
     try {
       setLoading(true);
+
+      const payload = {
+        ...form,
+        // Punkte werden automatisch aus der Schwierigkeit abgeleitet
+        points: difficultyPoints[form.difficulty]
+      };
+
       if (editingId) {
         const { error: upError } = await supabase
           .from('quest_templates')
-          .update(form)
+          .update(payload)
           .eq('id', editingId);
         if (upError) throw upError;
       } else {
-        const { error: insError } = await supabase.from('quest_templates').insert(form);
+        const { error: insError } = await supabase.from('quest_templates').insert(payload);
         if (insError) throw insError;
       }
       resetForm();
@@ -85,7 +99,6 @@ export const QuestTemplatesPage: React.FC = () => {
       title: q.title,
       description: q.description,
       difficulty: q.difficulty,
-      points: q.points,
       category: q.category,
       is_active: q.is_active
     });
@@ -141,18 +154,6 @@ export const QuestTemplatesPage: React.FC = () => {
                 <option value="medium">Medium</option>
                 <option value="hard">Hard</option>
               </select>
-            </div>
-            <div className="field" style={{ maxWidth: 120 }}>
-              <label>Punkte</label>
-              <input
-                type="number"
-                min={1}
-                required
-                value={form.points}
-                onChange={(e) =>
-                  setForm({ ...form, points: e.target.value ? Number(e.target.value) : 0 })
-                }
-              />
             </div>
           </div>
           <div className="field-row">

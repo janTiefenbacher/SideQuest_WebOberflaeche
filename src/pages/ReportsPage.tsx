@@ -5,6 +5,8 @@ type ReportStatus = 'open' | 'in_review' | 'closed';
 
 interface ReportRow {
   id: string;
+  post_id: string;
+  reporter_id: string;
   reason: string;
   status: string;
   created_at: string;
@@ -14,10 +16,6 @@ interface ReportRow {
     content: string | null;
     image_url: string | null;
     user_name: string | null;
-  } | null;
-  reporter: {
-    id: string;
-    username: string;
   } | null;
 }
 
@@ -32,27 +30,22 @@ export const ReportsPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      // Beziehungen laut Schema:
-      // post_reports.post_id -> posts.id (post_reports_post_id_fkey)
-      // post_reports.reporter_id -> profiles.id (post_reports_reporter_id_fkey)
       let query = supabase
         .from('post_reports')
         .select(
           `
           id,
+          post_id,
+          reporter_id,
           reason,
           status,
           created_at,
           updated_at,
-          post:posts!post_reports_post_id_fkey (
+          post:posts (
             id,
             content,
             image_url,
             user_name
-          ),
-          reporter:profiles!post_reports_reporter_id_fkey (
-            id,
-            username
           )
         `
         )
@@ -188,7 +181,7 @@ export const ReportsPage: React.FC = () => {
                     </div>
                   </div>
                 </td>
-                <td>{r.reporter?.username ?? 'Unbekannt'}</td>
+                <td>{r.reporter_id}</td>
                 <td>
                   <button
                     className="btn btn-sm"

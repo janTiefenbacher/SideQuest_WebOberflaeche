@@ -7,6 +7,10 @@ interface DailyQuestRow {
   quest_date: string;
   is_completed: boolean;
   completed_at: string | null;
+  user: {
+    id: string;
+    username: string | null;
+  } | null;
   easy: { id: string; title: string } | null;
   medium: { id: string; title: string } | null;
   hard: { id: string; title: string } | null;
@@ -36,6 +40,10 @@ export const DailyQuestsPage: React.FC = () => {
           quest_date,
           is_completed,
           completed_at,
+          user:profiles!daily_quests_user_id_fkey (
+            id,
+            username
+          ),
           easy:quest_templates!daily_quests_easy_quest_id_fkey (
             id,
             title
@@ -115,7 +123,7 @@ export const DailyQuestsPage: React.FC = () => {
             {rows.map((r) => (
               <tr key={r.id}>
                 <td>{new Date(r.quest_date).toLocaleDateString()}</td>
-                <td>{r.user_id}</td>
+                <td>{r.user?.username ?? r.user_id}</td>
                 <td>
                   <div className="pill-group">
                     <span className="tag">{r.easy?.title ?? '–'}</span>

@@ -12,6 +12,11 @@ interface UserStatsRow {
   current_streak: number;
   longest_streak: number;
   last_quest_date: string | null;
+  profile: {
+    id: string;
+    username: string | null;
+    avatar_url: string | null;
+  } | null;
 }
 
 export const UserStatsPage: React.FC = () => {
@@ -36,7 +41,12 @@ export const UserStatsPage: React.FC = () => {
           hard_quests_completed,
           current_streak,
           longest_streak,
-          last_quest_date
+          last_quest_date,
+          profile:profiles!user_quest_stats_user_id_fkey (
+            id,
+            username,
+            avatar_url
+          )
         `
         )
         .order('total_points', { ascending: false })
@@ -86,7 +96,7 @@ export const UserStatsPage: React.FC = () => {
             )}
             {rows.map((r) => (
               <tr key={r.id}>
-                <td>{r.user_id}</td>
+                <td>{r.profile?.username ?? r.user_id}</td>
                 <td>{r.total_points}</td>
                 <td>{r.total_quests_completed}</td>
                 <td>

@@ -17,8 +17,8 @@ npm install
 2. Supabase-Verbindung konfigurieren (`.env.local` im Projektordner anlegen):
 
 ```bash
-VITE_SUPABASE_URL=deine_supabase_url
-VITE_SUPABASE_ANON_KEY=dein_supabase_key
+VITE_SUPABASE_URL='https://adcutkrypgdtlaqaxvqo.supabase.co';
+VITE_SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkY3V0a3J5cGdkdGxhcWF4dnFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2ODY0NzAsImV4cCI6MjA3MzI2MjQ3MH0.rNZdeby6C4yScBE-_elUdBDcpSkAc-r7lsH3NSfs_HU';
 ```
 
 3. Dev-Server starten:
