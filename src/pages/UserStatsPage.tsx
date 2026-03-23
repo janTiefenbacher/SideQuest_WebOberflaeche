@@ -12,15 +12,11 @@ interface UserStatsRow {
   current_streak: number;
   longest_streak: number;
   last_quest_date: string | null;
-  profile: {
-    id: string;
-    username: string | null;
-    avatar_url: string | null;
-  } | null;
 }
 
 export const UserStatsPage: React.FC = () => {
   const [rows, setRows] = useState<UserStatsRow[]>([]);
+  const [usernames, setUsernames] = useState<Record<string, string | null>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,18 +37,29 @@ export const UserStatsPage: React.FC = () => {
           hard_quests_completed,
           current_streak,
           longest_streak,
-          last_quest_date,
-          profile:profiles!user_quest_stats_user_id_fkey (
-            id,
-            username,
-            avatar_url
-          )
+          last_quest_date
         `
         )
         .order('total_points', { ascending: false })
         .limit(200);
       if (qError) throw qError;
-      setRows((data ?? []) as UserStatsRow[]);
+      const nextRows = (data ?? []) as UserStatsRow[];
+      setRows(nextRows);
+
+      const ids = Array.from(new Set(nextRows.map((r) => r.user_id).filter(Boolean)));
+      if (ids.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, username')
+          .in('id', ids);
+        const map: Record<string, string | null> = {};
+        for (const p of profilesData ?? []) {
+          map[p.id] = p.username;
+        }
+        setUsernames(map);
+      } else {
+        setUsernames({});
+      }
     } catch (e: any) {
       setError(e.message ?? 'Fehler beim Laden der User-Stats');
     } finally {
@@ -96,7 +103,7 @@ export const UserStatsPage: React.FC = () => {
             )}
             {rows.map((r) => (
               <tr key={r.id}>
-                <td>{r.profile?.username ?? r.user_id}</td>
+                <td>{usernames[r.user_id] ?? r.user_id}</td>
                 <td>{r.total_points}</td>
                 <td>{r.total_quests_completed}</td>
                 <td>

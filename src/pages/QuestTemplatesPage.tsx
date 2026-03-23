@@ -13,7 +13,7 @@ interface QuestTemplate {
   is_active: boolean;
 }
 
-type QuestTemplateForm = Omit<QuestTemplate, 'id' | 'points'>;
+type QuestTemplateForm = Omit<QuestTemplate, 'id'>;
 
 const difficultyPoints: Record<Difficulty, number> = {
   easy: 10,
@@ -25,7 +25,8 @@ const emptyForm: QuestTemplateForm = {
   title: '',
   description: '',
   difficulty: 'easy',
-  category: '',
+  points: difficultyPoints.easy,
+  category: 'Allgemein',
   is_active: true
 };
 
@@ -35,6 +36,7 @@ export const QuestTemplatesPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<QuestTemplateForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [pointsDirty, setPointsDirty] = useState(false);
 
   const load = async () => {
     try {
@@ -60,6 +62,7 @@ export const QuestTemplatesPage: React.FC = () => {
   const resetForm = () => {
     setForm(emptyForm);
     setEditingId(null);
+    setPointsDirty(false);
   };
 
   const onSubmit = async (e: FormEvent) => {
@@ -67,11 +70,7 @@ export const QuestTemplatesPage: React.FC = () => {
     try {
       setLoading(true);
 
-      const payload = {
-        ...form,
-        // Punkte werden automatisch aus der Schwierigkeit abgeleitet
-        points: difficultyPoints[form.difficulty]
-      };
+      const payload = { ...form };
 
       if (editingId) {
         const { error: upError } = await supabase
@@ -99,9 +98,11 @@ export const QuestTemplatesPage: React.FC = () => {
       title: q.title,
       description: q.description,
       difficulty: q.difficulty,
-      category: q.category,
+      points: q.points,
+      category: q.category || 'Allgemein',
       is_active: q.is_active
     });
+    setPointsDirty(true);
   };
 
   const toggleActive = async (q: QuestTemplate) => {
@@ -148,18 +149,43 @@ export const QuestTemplatesPage: React.FC = () => {
               <label>Schwierigkeit</label>
               <select
                 value={form.difficulty}
-                onChange={(e) => setForm({ ...form, difficulty: e.target.value as Difficulty })}
+                onChange={(e) => {
+                  const nextDifficulty = e.target.value as Difficulty;
+                  setForm((prev) => ({
+                    ...prev,
+                    difficulty: nextDifficulty,
+                    // Wenn der User die Punkte noch nicht manuell angepasst hat,
+                    // nutze den Vorschlag aus der Schwierigkeit.
+                    points: pointsDirty ? prev.points : difficultyPoints[nextDifficulty]
+                  }));
+                  if (!pointsDirty) setPointsDirty(false);
+                }}
               >
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>
                 <option value="hard">Hard</option>
               </select>
             </div>
+            <div className="field" style={{ maxWidth: 120 }}>
+              <label>Punkte</label>
+              <input
+                type="number"
+                min={1}
+                required
+                value={form.points}
+                onChange={(e) => {
+                  const next = e.target.value ? Number(e.target.value) : 0;
+                  setForm((prev) => ({ ...prev, points: next }));
+                  setPointsDirty(true);
+                }}
+              />
+            </div>
           </div>
           <div className="field-row">
             <div className="field">
               <label>Kategorie</label>
               <input
+                required
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
                 placeholder="z.B. Social, Health, Productivity…"
@@ -182,6 +208,7 @@ export const QuestTemplatesPage: React.FC = () => {
             <label>Beschreibung</label>
             <textarea
               rows={3}
+              required
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
             />

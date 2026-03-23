@@ -27,5 +27,31 @@ VITE_SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmF
 npm run dev
 ```
 
-Fertig – das UI greift automatisch auf die in der Frage gegebene Supabase-Struktur zu.
+### RLS / Admin Zugriff (wichtig)
+
+In deinem DB-Schema ist `quest_templates` mit RLS geschützt, aber es gibt in dem von dir geposteten Teil keine Policy für Insert/Update. Deshalb kann das UI beim Hinzufügen/Bearbeiten blockiert werden.
+
+Führe daher dieses SQL in deinem Supabase SQL Editor aus:
+
+- `supabase/quest_templates_admin_policy.sql`
+
+Danach sollte „Anlegen“ und „Bearbeiten“ in der UI funktionieren.
+
+### Optional: Dev ohne RLS-Policies (nur lokal)
+
+Wenn du im Dev wirklich schnell arbeiten willst, kannst du zusätzlich in deiner `.env.local` setzen:
+
+```bash
+VITE_SUPABASE_SERVICE_ROLE_KEY=dein_service_role_key
+```
+
+Dann nutzt das Admin-UI im DEV automatisch diesen Key (RLS aus, nur lokal). In Production bitte NICHT verwenden.
+
+### DEV-Notfall (öffnet RLS komplett)
+Wenn du nur schnell testen willst, ob es wirklich „nur“ an RLS liegt:
+
+- `supabase/quest_templates_dev_open_policy.sql`
+
+Danach sollte das UI Inserts/Updates erlauben, auch ohne Login/Admin-Claims.
+Wieder rückgängig machen, sobald es läuft.
 

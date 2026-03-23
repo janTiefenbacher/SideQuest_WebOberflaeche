@@ -7,10 +7,6 @@ interface DailyQuestRow {
   quest_date: string;
   is_completed: boolean;
   completed_at: string | null;
-  user: {
-    id: string;
-    username: string | null;
-  } | null;
   easy: { id: string; title: string } | null;
   medium: { id: string; title: string } | null;
   hard: { id: string; title: string } | null;
@@ -19,6 +15,7 @@ interface DailyQuestRow {
 
 export const DailyQuestsPage: React.FC = () => {
   const [rows, setRows] = useState<DailyQuestRow[]>([]);
+  const [usernames, setUsernames] = useState<Record<string, string | null>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,10 +37,6 @@ export const DailyQuestsPage: React.FC = () => {
           quest_date,
           is_completed,
           completed_at,
-          user:profiles!daily_quests_user_id_fkey (
-            id,
-            username
-          ),
           easy:quest_templates!daily_quests_easy_quest_id_fkey (
             id,
             title
@@ -66,7 +59,24 @@ export const DailyQuestsPage: React.FC = () => {
         .limit(200);
 
       if (qError) throw qError;
-      setRows((data ?? []) as DailyQuestRow[]);
+      const nextRows = (data ?? []) as DailyQuestRow[];
+      setRows(nextRows);
+
+      // Username separat laden (statt fragiler Table-Joins)
+      const ids = Array.from(new Set(nextRows.map((r) => r.user_id).filter(Boolean)));
+      if (ids.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, username')
+          .in('id', ids);
+        const map: Record<string, string | null> = {};
+        for (const p of profilesData ?? []) {
+          map[p.id] = p.username;
+        }
+        setUsernames(map);
+      } else {
+        setUsernames({});
+      }
     } catch (e: any) {
       setError(e.message ?? 'Fehler beim Laden der Daily Quests');
     } finally {
@@ -123,7 +133,7 @@ export const DailyQuestsPage: React.FC = () => {
             {rows.map((r) => (
               <tr key={r.id}>
                 <td>{new Date(r.quest_date).toLocaleDateString()}</td>
-                <td>{r.user?.username ?? r.user_id}</td>
+                <td>{usernames[r.user_id] ?? r.user_id}</td>
                 <td>
                   <div className="pill-group">
                     <span className="tag">{r.easy?.title ?? '–'}</span>
