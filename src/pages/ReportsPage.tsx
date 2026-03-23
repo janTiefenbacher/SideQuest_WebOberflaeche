@@ -17,6 +17,9 @@ interface ReportRow {
     image_url: string | null;
     user_name: string | null;
   } | null;
+  reporter: {
+    username: string | null;
+  } | null;
 }
 
 export const ReportsPage: React.FC = () => {
@@ -46,6 +49,9 @@ export const ReportsPage: React.FC = () => {
             content,
             image_url,
             user_name
+          ),
+          reporter:profiles!reporter_id (
+            username
           )
         `
         )
@@ -181,7 +187,7 @@ export const ReportsPage: React.FC = () => {
                     </div>
                   </div>
                 </td>
-                <td>{r.reporter_id}</td>
+                <td>{r.reporter?.username ?? r.reporter_id.slice(0, 8) + '…'}</td>
                 <td>
                   <button
                     className="btn btn-sm"
