@@ -23,7 +23,7 @@ interface ReportRow {
 }
 
 export const ReportsPage: React.FC = () => {
-  const [statusFilter, setStatusFilter] = useState<ReportStatus | 'all'>('open');
+  const [statusFilter, setStatusFilter] = useState<ReportStatus | 'all'>('all');
   const [rows, setRows] = useState<ReportRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

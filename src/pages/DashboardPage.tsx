@@ -3,9 +3,9 @@ import { supabase } from '../supabaseClient';
 
 interface Counts {
   openReports: number;
+  totalReports: number;
   totalPosts: number;
   totalQuestTemplates: number;
-  totalUsersWithStats: number;
 }
 
 export const DashboardPage: React.FC = () => {
@@ -19,23 +19,23 @@ export const DashboardPage: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        const [reportsRes, postsRes, templatesRes, statsRes] = await Promise.all([
+        const [openReportsRes, reportsRes, postsRes, templatesRes] = await Promise.all([
           supabase.from('post_reports').select('id', { count: 'exact', head: true }).eq('status', 'open'),
+          supabase.from('post_reports').select('id', { count: 'exact', head: true }),
           supabase.from('posts').select('id', { count: 'exact', head: true }),
-          supabase.from('quest_templates').select('id', { count: 'exact', head: true }),
-          supabase.from('user_quest_stats').select('id', { count: 'exact', head: true })
+          supabase.from('quest_templates').select('id', { count: 'exact', head: true })
         ]);
 
+        if (openReportsRes.error) throw openReportsRes.error;
         if (reportsRes.error) throw reportsRes.error;
         if (postsRes.error) throw postsRes.error;
         if (templatesRes.error) throw templatesRes.error;
-        if (statsRes.error) throw statsRes.error;
 
         setCounts({
-          openReports: reportsRes.count ?? 0,
+          openReports: openReportsRes.count ?? 0,
+          totalReports: reportsRes.count ?? 0,
           totalPosts: postsRes.count ?? 0,
-          totalQuestTemplates: templatesRes.count ?? 0,
-          totalUsersWithStats: statsRes.count ?? 0
+          totalQuestTemplates: templatesRes.count ?? 0
         });
       } catch (e: any) {
         setError(e.message ?? 'Fehler beim Laden der Übersicht');
@@ -69,32 +69,29 @@ export const DashboardPage: React.FC = () => {
 
         <div className="card">
           <div className="card-header">
-            <span className="card-title">Posts im System</span>
-            <span className="badge">Content</span>
+            <span className="card-title">Alle Reports</span>
+            <span className="badge">Tickets</span>
           </div>
-          <div className="card-value">{loading || !counts ? '–' : counts.totalPosts}</div>
+          <div className="card-value">{loading || !counts ? '–' : counts.totalReports}</div>
         </div>
 
         <div className="card">
           <div className="card-header">
-            <span className="card-title">Aktive Quest-Vorlagen</span>
+            <span className="card-title">Posts im System</span>
+            <span className="badge">Content</span>
+          </div>
+          <div className="card-value">
+            {loading || !counts ? '–' : counts.totalPosts}
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">Quest-Vorlagen</span>
             <span className="badge">Quests</span>
           </div>
           <div className="card-value">
             {loading || !counts ? '–' : counts.totalQuestTemplates}
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-header">
-            <span className="card-title">User mit Quest-Stats</span>
-            <span className="badge">
-              <span className="status-dot status-dot-green" />
-              Engagement
-            </span>
-          </div>
-          <div className="card-value">
-            {loading || !counts ? '–' : counts.totalUsersWithStats}
           </div>
         </div>
       </div>

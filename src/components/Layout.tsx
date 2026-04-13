@@ -25,9 +25,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           <NavLink to="/quests/daily" className="nav-link">
             Daily Quests
           </NavLink>
-          <NavLink to="/users/stats" className="nav-link">
-            User-Stats
-          </NavLink>
         </nav>
       </aside>
       <div className="main">
